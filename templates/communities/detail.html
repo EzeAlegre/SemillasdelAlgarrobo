@@ -1,0 +1,174 @@
+{% extends 'includes/navbar.html' %}
+{% load humanize %}
+
+{% block title %}{{ community.name }} - Comunidades Unidas{% endblock %}
+
+{% block content %}
+<main class="page-content">
+    <a href="{% url 'communities:list' %}" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Volver a comunidades
+    </a>
+
+    <div class="detail-layout">
+        <aside class="community-sidebar">
+            <img src="{{ community.get_image }}" alt="{{ community.name }}" class="sidebar-image">
+            <h1>{{ community.name }}</h1>
+            <p class="sidebar-desc">{{ community.description }}</p>
+            <ul class="sidebar-details">
+                <li>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    {{ community.province }}
+                </li>
+                <li>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    {{ community.population }} habitantes
+                </li>
+                <li>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    {{ community.email }}
+                </li>
+            </ul>
+            <div class="sidebar-stats">
+                <p>Necesidades activas: <strong>{{ community.active_needs_count }}</strong></p>
+                {% if community.urgent_needs_count %}
+                <p>Urgentes: <span class="urgent-badge">{{ community.urgent_needs_count }}</span></p>
+                {% endif %}
+            </div>
+        </aside>
+
+        <section class="needs-section">
+            <div class="needs-header">
+                <h2>Necesidades de la Comunidad</h2>
+                <form method="get">
+                    <select name="categoria" class="filter-select" onchange="this.form.submit()">
+                        <option value="">Todas las categorías</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+
+            <div class="needs-list">
+                {% for need in needs %}
+                <article class="need-card {% if need.is_urgent %}need-urgent{% endif %}" data-need-id="{{ need.pk }}">
+                    <div class="need-card-header">
+                        <div>
+                            <h3>
+                                {{ need.title }}
+                                {% if need.is_urgent %}
+                                <span class="badge badge-urgent">Urgente</span>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <span class="badge badge-category badge-{{ need.category|lower }}">{{ need.category }}</span>
+                    </div>
+                    <p class="need-desc">{{ need.description }}</p>
+                    <div class="progress-section">
+                        <div class="progress-labels">
+                            <span>Progreso</span>
+                            <span>{{ need.progress_percent }}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ need.progress_percent }}%"></div>
+                        </div>
+                        <div class="progress-amounts">
+                            <span>${{ need.raised_amount|floatformat:0|intcomma }} de ${{ need.target_amount|floatformat:0|intcomma }}</span>
+                            <span>Faltan ${{ need.remaining_amount|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+                    {% if need.remaining_amount > 0 %}
+                    <button type="button" class="btn btn-primary btn-full btn-donate"
+                            data-need-id="{{ need.pk }}"
+                            data-need-title="{{ need.title }}"
+                            data-community-name="{{ community.name }}"
+                            data-remaining="{{ need.remaining_amount|floatformat:0 }}">
+                        Donar Ahora
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-secondary btn-full" disabled>Meta alcanzada</button>
+                    {% endif %}
+                </article>
+                {% empty %}
+                <div class="empty-state">
+                    <p>No hay necesidades activas en esta categoría.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</main>
+
+<div id="donation-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-content">
+        <button type="button" class="modal-close" data-close-modal>&times;</button>
+        <h2>Realizar Donación</h2>
+        <p class="modal-subtitle" id="modal-subtitle"></p>
+        <div class="campaign-summary">
+            <strong id="modal-need-title"></strong>
+            <div class="summary-row">
+                <span>Monto faltante:</span>
+                <strong id="modal-remaining"></strong>
+            </div>
+        </div>
+        <form id="donation-form">
+            {% csrf_token %}
+            <input type="hidden" id="donation-need-id" name="need_id">
+            <div class="form-group">
+                <label for="donation-amount">Monto a donar (ARS)</label>
+                <input type="number" id="donation-amount" name="amount" class="form-input form-input-lg" value="10000" min="1" step="1">
+            </div>
+            <div class="quick-amounts">
+                <button type="button" class="quick-btn" data-amount="1000">$1k</button>
+                <button type="button" class="quick-btn" data-amount="5000">$5k</button>
+                <button type="button" class="quick-btn" data-amount="10000">$10k</button>
+                <button type="button" class="quick-btn" data-amount="20000">$20k</button>
+            </div>
+            <div id="donation-error" class="form-error hidden"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary">
+                    <span class="heart-icon">♡</span> Donar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="success-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close-success></div>
+    <div class="modal-content modal-success">
+        <button type="button" class="modal-close" data-close-success>&times;</button>
+        <div class="success-icon">✓</div>
+        <h2>¡Donación Exitosa!</h2>
+        <p class="modal-subtitle" id="success-message"></p>
+        <div class="success-summary">
+            <div class="summary-item"><span>Monto donado</span><strong id="success-amount"></strong></div>
+            <div class="summary-item"><span>Comunidad</span><strong id="success-community"></strong></div>
+            <div class="summary-item"><span>Necesidad</span><strong id="success-need"></strong></div>
+        </div>
+        <div class="form-group">
+            <label>Código de confirmación:</label>
+            <input type="text" id="success-code" class="form-input" readonly>
+            <p class="help-text">Guardá este código para tus registros.</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-full" data-close-success>Continuar</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.DONATE_URL_TEMPLATE = "{% url 'communities:donate' 0 %}".replace('/0/', '/{id}/');
+</script>
+{% endblock %}

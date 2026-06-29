@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Comunidades Unidas - Acceso{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block body %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="auth-title">Comunidades Unidas</h1>
+        <p class="auth-subtitle">Apoyando a las comunidades aborígenes de Argentina</p>
+
+        <div class="tab-switcher">
+            <a href="?tab=login" class="tab-btn {% if tab == 'login' %}active{% endif %}">Iniciar Sesión</a>
+            <a href="?tab=register" class="tab-btn {% if tab == 'register' %}active{% endif %}">Registrarse</a>
+        </div>
+
+        {% if tab == 'login' %}
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <input type="hidden" name="tab" value="login">
+            <div class="form-group">
+                <label for="id_username">Email</label>
+                {{ login_form.username }}
+                {% if login_form.username.errors %}
+                <span class="field-error">{{ login_form.username.errors.0 }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password">Contraseña</label>
+                {{ login_form.password }}
+                {% if login_form.password.errors %}
+                <span class="field-error">{{ login_form.password.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% if login_form.non_field_errors %}
+            <div class="form-error">{{ login_form.non_field_errors.0 }}</div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-full">Iniciar Sesión</button>
+        </form>
+        {% else %}
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <input type="hidden" name="tab" value="register">
+            <div class="form-group">
+                <label for="id_display_name">Nombre</label>
+                {{ register_form.display_name }}
+                {% if register_form.display_name.errors %}
+                <span class="field-error">{{ register_form.display_name.errors.0 }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_email">Email</label>
+                {{ register_form.email }}
+                {% if register_form.email.errors %}
+                <span class="field-error">{{ register_form.email.errors.0 }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password1">Contraseña</label>
+                {{ register_form.password1 }}
+                {% if register_form.password1.errors %}
+                <span class="field-error">{{ register_form.password1.errors.0 }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_account_type">Tipo de cuenta</label>
+                <div class="radio-options">
+                    {% for radio in register_form.account_type %}
+                    <label class="radio-label">{{ radio.tag }} {{ radio.choice_label }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if register_form.non_field_errors %}
+            <div class="form-error">{{ register_form.non_field_errors.0 }}</div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-full">Registrarse</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

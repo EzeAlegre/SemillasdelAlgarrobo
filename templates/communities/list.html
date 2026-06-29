@@ -1,0 +1,69 @@
+{% extends 'includes/navbar.html' %}
+
+{% block title %}Comunidades Aborígenes - Comunidades Unidas{% endblock %}
+
+{% block content %}
+<main class="page-content">
+    <div class="page-header">
+        <h1>Comunidades Aborígenes</h1>
+        <p class="page-subtitle">Apoya a las comunidades que más lo necesitan en Salta, Jujuy, Chaco y Formosa</p>
+    </div>
+
+    <form method="get" class="filters-bar">
+        <div class="search-box">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="text" name="q" value="{{ search }}" placeholder="Buscar comunidades..." class="search-input">
+        </div>
+        <select name="provincia" class="filter-select" onchange="this.form.submit()">
+            <option value="">Todas las provincias</option>
+            {% for value, label in provinces %}
+            <option value="{{ value }}" {% if province == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm" style="display:none">Filtrar</button>
+    </form>
+
+    <div class="communities-grid">
+        {% for community in communities %}
+        <article class="community-card">
+            <div class="card-image-wrap">
+                <img src="{{ community.get_image }}" alt="{{ community.name }}" class="card-image">
+                <span class="location-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    {{ community.province }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h2>{{ community.name }}</h2>
+                <p class="card-desc">{{ community.description|truncatewords:20 }}</p>
+                <div class="card-meta">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    {{ community.population }} habitantes
+                </div>
+                <a href="{% url 'communities:detail' community.pk %}" class="btn btn-primary btn-full">Ver Necesidades</a>
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty-state">
+            <p>No se encontraron comunidades con los filtros seleccionados.</p>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelector('.search-input')?.addEventListener('input', function() {
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => this.form.submit(), 400);
+});
+</script>
+{% endblock %}

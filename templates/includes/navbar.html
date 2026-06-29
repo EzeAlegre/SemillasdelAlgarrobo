@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<header class="navbar">
+    <div class="navbar-inner">
+        <div class="navbar-left">
+            <a href="{% url 'communities:list' %}" class="brand">
+                <span class="brand-icon">♥</span>
+                Comunidades Unidas
+            </a>
+            <nav class="nav-links">
+                <a href="{% url 'communities:list' %}" class="nav-btn {% if request.resolver_match.url_name == 'list' %}active{% endif %}">Comunidades</a>
+                {% if user.is_authenticated and user.is_community %}
+                <a href="{% url 'communities:my_needs' %}" class="nav-btn {% if request.resolver_match.url_name == 'my_needs' %}active{% endif %}">Mis Necesidades</a>
+                {% endif %}
+            </nav>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="user-menu">
+            <div class="user-avatar">{{ user.avatar_initial }}</div>
+            <span class="user-name">{{ user.get_display_name }}</span>
+            <a href="{% url 'accounts:logout' %}" class="logout-link" title="Cerrar sesión">Salir</a>
+        </div>
+        {% endif %}
+    </div>
+</header>
+{% block content %}{% endblock %}
+{% endblock %}

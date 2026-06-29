@@ -1,0 +1,78 @@
+{% extends 'includes/navbar.html' %}
+{% load humanize %}
+
+{% block title %}Gestión de Necesidades - Comunidades Unidas{% endblock %}
+
+{% block content %}
+<main class="page-content page-narrow">
+    <h1 class="page-title">Gestión de Necesidades</h1>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2>Cargar Nueva Necesidad</h2>
+            <p>Completa el formulario para publicar una nueva necesidad de tu comunidad</p>
+        </div>
+
+        {% if not community %}
+        <div class="notice-box notice-warning">
+            Tu cuenta no tiene una comunidad asociada. Contactá al administrador para vincular tu perfil.
+        </div>
+        {% else %}
+        <form method="post" class="needs-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_title">Título de la necesidad <span class="required">*</span></label>
+                {{ form.title }}
+                {% if form.title.errors %}<span class="field-error">{{ form.title.errors.0 }}</span>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_description">Descripción <span class="required">*</span></label>
+                {{ form.description }}
+                {% if form.description.errors %}<span class="field-error">{{ form.description.errors.0 }}</span>{% endif %}
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_category">Categoría <span class="required">*</span></label>
+                    {{ form.category }}
+                </div>
+                <div class="form-group">
+                    <label for="id_target_amount">Monto objetivo (ARS) <span class="required">*</span></label>
+                    {{ form.target_amount }}
+                    {% if form.target_amount.errors %}<span class="field-error">{{ form.target_amount.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="form-group toggle-group">
+                <label class="toggle-label">
+                    {{ form.is_urgent }}
+                    <span class="toggle-switch"></span>
+                    Marcar como urgente
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">
+                <span class="plus-icon">+</span> Publicar Necesidad
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if active_needs %}
+    <div class="form-card active-needs-card">
+        <div class="form-card-header">
+            <h2>Necesidades Activas ({{ active_needs.count }})</h2>
+            <p>Lista de necesidades publicadas para esta comunidad</p>
+        </div>
+        <div class="active-needs-list">
+            {% for need in active_needs %}
+            <div class="active-need-item">
+                <div>
+                    <strong>{{ need.title }}</strong>
+                    <p>{{ need.category }} • ${{ need.raised_amount|floatformat:0|intcomma }} de ${{ need.target_amount|floatformat:0|intcomma }}</p>
+                </div>
+                <span class="status-active">Activa</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}
